@@ -52,19 +52,39 @@ dim(counts_mat)
 # Look at a slice of the raw integer reads
 counts[1:5, 1:4]
 
-#MAYBE DELETE
-# Force the entire dataset to be interpreted strictly as numbers
-#counts_matrix <- as.matrix(counts)
-#class(counts_matrix) <- "numeric"
-#check that the expression look valid
-#expr[1:5,1:3]
 
 #check for null values
 clean <- any(is.na(counts))
 dim(clean)
 #2
-#quality control of genomic data (first step of bioinformatics pipelines)
+#Differential Expression Analysis 
 
+#Start at character 1 and stop at character 1; if malignant("C"), mark as 1; otherwise, mark as 0
+sample_names <- colnames(counts_mat)
+
+labels <- ifelse(substr(sample_names, 1, 1) == "C", "Cancer", "Normal")
+
+table(labels)
+dim(X)
+
+colData <- data.frame(
+  row.names = sample_names,
+  condition = factor(labels, levels=c("Normal", "Cancer"))
+)
+tail(colData)
+dds <- DESeqDataSetFromMatrix(countData = counts_mat,
+                              colData = colData,
+                              design = ~ condition)
+
+#generate results based on DE dataset from previous lines 
+dds <- DESeq(dds)
+
+
+#confirm result names
+resultsNames(dds)
+
+
+res <- results(dds, contrast = c("condition", "Cancer", "Normal"))
 
 #filter low-expression noise
 #C for cancer, N for normal
@@ -92,35 +112,6 @@ summary(pca)
 X <- pca$x[, 1:10]
 #4a
 #TRAINING LOGISTIC REGRESSION 
-sample_names <- colnames(counts_mat)
-
-#Start at character 1 and stop at character 1; if malignant("C"), mark as 1; otherwise, mark as 0
-labels <- ifelse(substr(sample_names, 1, 1) == "C", "Cancer", "Normal")
-
-table(labels)
-dim(X)
-
-colData <- data.frame(
-  row.names = sample_names,
-  condition = factor(labels, levels=c("Normal", "Cancer"))
-)
-tail(colData)
-
-#Differential Expression Analysis 
-dds <- DESeqDataSetFromMatrix(countData = counts_mat,
-                              colData = colData,
-                              design = ~ condition)
-
-#generate results based on DE dataset from previous lines 
-dds <- DESeq(dds)
-
-
-#confirm result names
-resultsNames(dds)
-
-
-res <- results(dds, contrast = c("condition", "Cancer", "Normal"))
-
 #numeric labels
 labels <- ifelse(substr(rownames(pca_input), 1, 1) == "C", 1, 0)
 table(labels)
@@ -296,7 +287,8 @@ sig_gene_ids <- rownames(sig_genes)
 up_genes <- sig_genes[sig_genes$log2FoldChange > 0, ]
 down_genes <- sig_genes[sig_genes$log2FoldChange < 0, ]
 
-length(sig_gene_ids)   # check how many significant genes you have
+# significant genes
+length(sig_gene_ids)   
 
 # 2. Strip Ensembl version numbers (e.g. "ENSG00000063176.16" -> "ENSG00000063176")
 gene_ids_clean <- sub("\\..*", "", sig_gene_ids)
