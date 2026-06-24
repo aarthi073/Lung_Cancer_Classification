@@ -44,7 +44,7 @@ This is one of the interpretable classification models that fits a sigmoid funct
 
 The epsilon was treated as a hyperparameter representative of convergence tolerance where a model's improvement slows down (1e-8 and 1e-10).
 
-2. Random Forest is a form of ensemble learning in machien learning that combines decision trees to perform both regression and classificatino tasks, choosing the average prediction in the former task and the majority prediction in the latter task. A forest of trees are created through bagging or bootstrap aggregating, sampling with replacement and choosing random features for each subset of data. The majority vote for a tumor class was considered in the prediciton.
+2. Random Forest is a form of ensemble learning in machine learning that combines decision trees to perform both regression and classificatino tasks, choosing the average prediction in the former task and the majority prediction in the latter task. A forest of trees are created through bagging or bootstrap aggregating, sampling with replacement and choosing random features for each subset of data. The majority vote for a tumor class was considered in the prediciton.
 
 The number of trees was treated as a hyperparameter and stopping condition (500, 100, 50).
 
@@ -71,7 +71,7 @@ It can be concluded that PC2 and PC3 have the most predictive power based on the
 
 **Visualization**
 ```
-![Alt text](Figures/Variance_Importance_Plot.png)
+![Alt text](https://github.com/aarthi073/Lung_Cancer_Classification.git/Figures/Variance_Importance_Plot.png)
 ```
 ** Mapping Genes **
 
