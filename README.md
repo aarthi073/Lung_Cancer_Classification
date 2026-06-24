@@ -10,7 +10,7 @@ Lung cancer is ranked #1 globally as the leading cancer that causes death. Cause
 The machine learning pipeline uses the bulk RNA-seq data from an equal proportion of tumor and non-tumor lung tissue samples with 61852 genes and 204 patient samples. The original study used this data to understand the role of thrombopoietic programs in lung cancer, which drive blood platelet production.  
 
 
-** GEO LINK **
+**GEO LINK**
 https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE329380
 
 # Motivation 
@@ -20,7 +20,7 @@ This largely relies on existing expression data and mapping genes to pathways th
 
 # Pipeline
 
-** Data Preprocessing **
+**Data Preprocessing**
 
 Label encoding: Converted gene expression counts from a dataframe to a matrix to perform numeric operations (e.g. isolating genes that are expressed in more than 3 samples).
 
@@ -30,15 +30,15 @@ Defined labels and expression data as a dataframe for differential expression an
 
 One-Hot encoding was employed to define malignant tumors as "1" and normal tissues as "0".
 
-** Differential Expression Analysis **
+**Differential Expression Analysis**
 Analyzed genes that were overexpressed or underexpressed in tumor samples to understand what genes are involved with tumor proliferation.
 This was done using the DESeq2 package from Bioconductor.
 
-** Normalization and Dimensionality Reduction **
+**Normalization and Dimensionality Reduction**
 Raw numerical values were adjusted to accurately compare gene expression, removing technical noise while preserving true biological signals usign the counts per million function.
 Principal component analysis (PCA) was performed to compress the data into components, the top 10 of which could be used as the new features for model training.
 
-** Model Training **
+**Model Training**
 1. Logistic Regrsesion
 This is one of the interpretable classification models that fits a sigmoid function on the data. Based on a probability score and threshold (0.5), the sample is classified as malignant or normal. 
 
@@ -54,7 +54,7 @@ The number of rounds (nrounds) were treated as a hyperparameter (100, 500, 1000)
 
  
 
-** Performance Evaluation **
+**Performance Evaluation**
 1. The Akaike Information Criterion (AIC) and confusion matrix were evaluation tools in logistic regression.
 
 2. Random Forest visualization, OOB estimate of error rae, and confusion matrix were used as evaluation tools in Random Forest.
@@ -62,9 +62,16 @@ The number of rounds (nrounds) were treated as a hyperparameter (100, 500, 1000)
 3. Prediction probability, confusion matrix, and area under the curve were evaluation metrics in XGBoost.
 
 
-** Feature Importance **
+**Feature Importance**
+1. An odds ratio was used to understand which features increase or decrease the odds of the outcome: PC2 (increase), PC3 (decrease)
+2. Importance scores were used to determine feature importance in Random Forest: PC2, PC3, and PC6 
+3. The importance attribute of the xgboost package was used to determine feature importance in XGBoost based on gain, cover, and frequency: PC2, PC1, and PC3 in order of most gain, cover, and frequency.
+
+It can be concluded that PC2 and PC3 have the most predictive power based on the odds ratio and improtance scores.
 
 **Visualization**
-
+```
+![Alt text](Figures/Variance_Importance_Plot.png)
+```
 ** Mapping Genes **
 
