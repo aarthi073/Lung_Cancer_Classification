@@ -71,7 +71,7 @@ It can be concluded that PC2 and PC3 have the most predictive power based on the
 
 **Visualization**
 
-![Alt text](https://github.com/aarthi073/Lung_Cancer_Classification.git/Figures/Variance_Importance_Plot.png)
+![Alt text](Figures/Variance_Importance_Plot.png)
 
 ** Mapping Genes **
 
