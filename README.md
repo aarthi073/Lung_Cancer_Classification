@@ -70,8 +70,8 @@ The number of rounds (nrounds) were treated as a hyperparameter (100, 500, 1000)
 It can be concluded that PC2 and PC3 have the most predictive power based on the odds ratio and improtance scores.
 
 **Visualization**
-```
+
 ![Alt text](https://github.com/aarthi073/Lung_Cancer_Classification.git/Figures/Variance_Importance_Plot.png)
-```
+
 ** Mapping Genes **
 
