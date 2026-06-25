@@ -71,7 +71,7 @@ It can be concluded that PC2 and PC3 have the most predictive power based on the
 **Visualization and Mapping Genes**
 ![Variance Importance Plot](Figures/Variance_Importance_Plot.png)
 The variance importance plot from the random forest model shows that PC2 and PC3 contribute the most to the tumor classification.
-![Dataframe-Based Random Forest](Figures/Model_RF_Tree.png)
+![Dataframe-Based Random Forest](Figures/Model_RF_1_Tree.png)
 The decision structure of one of the trees of the ensemble for the dataframe-based random forest was plotted as a representative tree to make the model decisionmaking process more interpretable. This tree shows how the first few nodes contain a comparison with PC2 and PC3 before moving down the decision tree, illustrating their importance in the classification decision.
 ![Barplot of Pathways](Figures/Barplot.png)
 ![Dotplot of Pathways](Figures/Dotplot.png)
@@ -87,6 +87,8 @@ Therefore, even as these models become refined, retrained, and re-evaluated with
 
 # Packages
 BiocManager, randomForest, devtools, xgboost, caret, pROC
+
+# Sources
 
 # Author 
 
