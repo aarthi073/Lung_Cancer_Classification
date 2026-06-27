@@ -18,6 +18,23 @@ https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE329380
 Understanding the genetic differences between normal and fatal tumors and accurately classifying tumors based on past data is important to avoid test errors and risk patient lives. Especially as contemporary society moves towards computational modeling, diagnosis, and innovative medicine production, training reliable models to facilitate treatment plans and tumor characteristics can allow healthcare professionals to spend more time on harnessing their technical expertise to support patients. In fact, targeted treatment through immunotherapy, AI-driven antibody discovery, and gene therapy are current examples of technology-driven innovative medicine.
 This largely relies on existing expression data and mapping genes to pathways that explain other fatalities.
 
+# Repository Structure
+|-- Figures
+|   |-- Barplot.png
+|   |-- Dataframe-Based_Random_Forest_Tree.png
+|   |-- Dotplot.png
+|   `-- Variance_Importance_Plot.png
+|-- GSE329380
+|   `-- GSE329380_expr_count_lungcaner.csv.gz
+|-- Packages
+|   |-- Packages.R
+|   `-- session_info.txt
+|-- Table
+|   `-- Representative_Model_Summary.csv
+|-- src
+|   `-- Lung_Cancer_Classification.R
+`-- README.md
+
 # Pipeline
 
 **Data Preprocessing**
