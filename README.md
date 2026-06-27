@@ -19,6 +19,7 @@ Understanding the genetic differences between normal and fatal tumors and accura
 This largely relies on existing expression data and mapping genes to pathways that explain other fatalities.
 
 # Repository Structure
+```
 |-- Figures
 |   |-- Barplot.png
 |   |-- Dataframe-Based_Random_Forest_Tree.png
@@ -34,7 +35,7 @@ This largely relies on existing expression data and mapping genes to pathways th
 |-- src
 |   `-- Lung_Cancer_Classification.R
 `-- README.md
-
+```
 # Pipeline
 
 **Data Preprocessing**
