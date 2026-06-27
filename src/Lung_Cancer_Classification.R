@@ -46,7 +46,7 @@ gene_ids <- counts$gene_id
 counts_mat <- as.matrix(counts[, -(1:2)]) #remove gene_id columns
 storage.mode(counts_mat) <- "numeric"
 rownames(counts_mat) <- gene_ids
-# Inspect the dataset size: rows (genes) x columns (patient samples)
+# Dimensions of data: rows (genes), columns (patient samples)
 dim(counts_mat)
 
 # Look at a slice of the raw integer reads
@@ -59,18 +59,21 @@ dim(clean)
 #2
 #Differential Expression Analysis 
 
-#Start at character 1 and stop at character 1; if malignant("C"), mark as 1; otherwise, mark as 0
 sample_names <- colnames(counts_mat)
 
+#Start at character 1 and stop at character 1; if malignant("C"), mark as 1; otherwise, mark as 0
 labels <- ifelse(substr(sample_names, 1, 1) == "C", "Cancer", "Normal")
 
 table(labels)
-dim
+
 colData <- data.frame(
   row.names = sample_names,
   condition = factor(labels, levels=c("Normal", "Cancer"))
 )
 tail(colData)
+
+#organize raw RNA-seq count data for differential gene expression analysis;
+#condition is to find genes that differ by condition
 dds <- DESeqDataSetFromMatrix(countData = counts_mat,
                               colData = colData,
                               design = ~ condition)
@@ -98,6 +101,7 @@ filtered_counts <- counts_mat[genes, ]
 
 
 normalized_matrix <- cpm(filtered_counts, log=TRUE, prior.count=1)
+
 #PCA transposition
 pca_input <- t(normalized_matrix)
 
@@ -106,12 +110,12 @@ pca <- prcomp(pca_input, center=TRUE, scale.=TRUE)
 
 summary(pca)
 
-#4a Train Logistic Regression Model
-#features: first 10 components
+#features: first 10 components; reduce possible feature dimensionality
 X <- pca$x[, 1:10]
-#4a
-#TRAINING LOGISTIC REGRESSION 
-#numeric labels
+
+#4a Train Logistic Regression Model
+
+#numeric label encoding to build dataset for model
 labels <- ifelse(substr(rownames(pca_input), 1, 1) == "C", 1, 0)
 table(labels)
 
@@ -122,19 +126,29 @@ data <- data.frame(
 )
 
 
+#split data
+set.seed(42)
+idx <- sample(nrow(data), 0.8 * nrow(data))
+train_data <- data[idx, ]
+#20% of data, which is not in idx
+test_data <- data[-idx,]
 
- #logistic regression; Generalized Linear Model (linear regression to classification problems)
+train_x <- train_data[,-1]
+train_y <- train_data[,1]
+test_x <- test_data[,-1]
+test_y <- test_data[,1]
+#logistic regression; Generalized Linear Model (linear regression to classification problems)
 #binomial classification problem so training family is binomial
 #Hyperparameter: Epsilon = 1e-8 or 1e-10 
 #epsilon -> convergence tolerance (predictions stabilize); default is 1e-8
-model_lgr_1 <- glm(label ~ ., data = data, family = binomial())
+model_lgr_1 <- glm(label ~ ., data = train_data, family = binomial())
 
 
 #Positive Coefficient increasing tumor probability, decreases tumor probability
 summary(model_lgr_1)
 print(model_lgr_1)
 #predictions
-probs_1 <- predict(model_lgr_1, type="response")
+probs_1 <- predict(model_lgr_1, newdata=test_data, type="response")
 print(probs_1)
 
 #convert probabilities
@@ -142,20 +156,22 @@ print(probs_1)
 pred_1 <- ifelse(probs_1 > 0.5, 1, 0)
 
 #5a evaluate performance; confusion matrix
-table(Predicted = pred_1, Actual = labels)
+table(Predicted = pred_1, Actual = test_data$label)
+accuracy_lgr_1 <- mean(pred_1 == test_data$label)
+auc_lgr1 <- auc(roc(test_data$label, probs_1))
 
-#epsilon = 1e-10; slightly lower AIC by 0.002 
-model_lgr_2 <- glm(label ~ ., data = data, family = binomial(), epsilon = 1e-10)
-accuracy_lgr_1 <- mean(pred_1 == labels)
+#98.25% auc
+cat("area under the curve:", round(auc_lgr1*100,2), "%\n")
 
-#97.55% accuracy
+#97.56% accuracy
 cat("Logistic Regression 1 Accuracy:", round(accuracy_lgr_1 * 100, 2), "%\n")
 
-
+#epsilon = 1e-10; slightly lower AIC by 0.002 
+model_lgr_2 <- glm(label ~ ., data = train_data, family = binomial(), epsilon = 1e-10)
 summary(model_lgr_2)
 print(model_lgr_2)
 #predictions
-probs_2 <- predict(model_lgr_2, type="response")
+probs_2 <- predict(model_lgr_2, newdata = test_data, type="response")
 print(probs_2)
 
 #convert probabilities
@@ -163,11 +179,14 @@ print(probs_2)
 pred_2 <- ifelse(probs_2 > 0.5, 1, 0)
 
 #5a evaluate performance; confusion matrix
-table(Predicted = pred_2, Actual = labels)
-accuracy_lgr_2 <- mean(pred_2 == labels)
+table(Predicted = pred_2, Actual = test_data$label)
+accuracy_lgr_2 <- mean(pred_2 == test_data$label)
+auc_lgr2 <- auc(roc(test_data$label, probs_2))
 
+#98.25% auc
+cat("area under the curve:", round(auc_lgr2*100,2), "%\n")
 #97.55% accuracy
-cat("Logistic Regression 1 Accuracy:", round(accuracy_lgr_2 * 100, 2), "%\n")
+cat("Logistic Regression 2 Accuracy:", round(accuracy_lgr_2 * 100, 2), "%\n")
 
 #5b Random Forest Modeling
 #Hyperparameter: ntree = 500, 100, 50 
@@ -175,70 +194,92 @@ devtools::install_github('araastat/reprtree')
 reprtree::plot.getTree(model_rf, k = 1)
 set.seed(42)
 model_rf_1 <- randomForest(factor(label) ~.,
-                        data = data,
+                        data = train_data,
                         ntree = 500, 
                         mtry =3,
                         importance = TRUE)
 summary(model_rf_1)
 
-# 1- 0.0637 = 0.9363 = 93.63%
+# 1- 0.0491 = 0.9509 = 95.09%
 print(model_rf_1)
-reprtree::plot.getTree(model_rf_1, k = 1)
+rf_probs_1 <- predict(model_rf_1, newdata = as.matrix(test_x), type="prob")[,2]
 
+#96.62%
+auc(roc(test_data$label, rf_probs_1))
+reprtree::plot.getTree(model_rf_1, k = 1)
 
 #random forest set as a matrix.
 set.seed(42)
-new_model_rf_1 <- randomForest(x=as.matrix(X),
-                               y = factor(labels), ntree=500)
+new_model_rf_1 <- randomForest(x=as.matrix(train_x),
+                               y = factor(train_y), ntree=500)
 
 summary(new_model_rf_1)
 
-# 1-0.0588 = 0.9412 = 94.12%
+# 1-0.0429 = 0.9571 = 95.71%
 print(new_model_rf_1)
+new_rf_probs_1 <- predict(new_model_rf_1, newdata = as.matrix(test_x), type="prob")[,2]
+
+#96.5%
+auc(roc(test_data$label, new_rf_probs_1))
+
 
 #100 trees
 set.seed(42)
 model_rf_2 <- randomForest(factor(label) ~.,
-                         data = data,
+                         data = train_data,
                          ntree = 100, 
                          mtry =3,
                          importance = TRUE)
 summary(model_rf_2)
-# 1- 0.0735 = 0.9265 = 92.65%
+# 1- 0.0552 = 0.9448 = 94.48%
 print(model_rf_2)
-reprtree::plot.getTree(model_rf_2, k = 1)
+rf_probs_2 <- predict(model_rf_2, newdata=as.matrix(test_x),type="prob")[,2]
+#0.9575
+auc(roc(test_data$label, rf_probs_2))
 
 #random forest set as a matrix.
 set.seed(42)
-new_model_rf_2 <- randomForest(x=as.matrix(X),
-                               y = factor(labels), ntree=100)
+new_model_rf_2 <- randomForest(x=as.matrix(train_x),
+                               y = factor(train_y), ntree=100)
 
 summary(new_model_rf_2)
 
-# 1-0.0588 = 0.9412 = 94.12%
+# 1-0.0552 = 0.9448 = 94.48%
 print(new_model_rf_2)
+new_rf_probs_2 <- predict(new_model_rf_2, newdata=as.matrix(test_x),type="prob")[,2]
+
+#97.12%
+auc(roc(test_data$label, new_rf_probs_2))
 
 #50 trees
 set.seed(42)
 model_rf_3 <- randomForest(factor(label) ~.,
-                           data = data,
+                           data = train_data,
                            ntree = 50, 
                            mtry =3,
                            importance = TRUE)
 summary(model_rf_3)
-# 1- 0.0637 = 0.9363 = 93.63%
+# 1- 0.0798 = 0.9202 = 92.02%
 print(model_rf_3)
-reprtree::plot.getTree(model_rf_3, k = 1)
+rf_probs_3 <- predict(model_rf_3, newdata=as.matrix(test_x),type="prob")[,2]
+
+#95.25%
+auc(roc(test_data$label, rf_probs_3))
 
 #random forest set as a matrix.
 set.seed(42)
-new_model_rf_3 <- randomForest(x=as.matrix(X),
-                               y = factor(labels), ntree=50)
+new_model_rf_3 <- randomForest(x=as.matrix(train_x),
+                               y = factor(train_y), ntree=50)
 
 summary(new_model_rf_3)
 
-# 1 - 0.0637 = 93.63%
+# 1 - 0.0613 = 93.87%
 print(new_model_rf_3)
+
+new_rf_probs_3 <- predict(new_model_rf_3, newdata=as.matrix(test_x),type="prob")[,2]
+
+#97.62%
+auc(roc(test_data$label, new_rf_probs_3))
 
 #Random Forest Evaluation
 #Tree without matrix has lower error

@@ -1,0 +1,4 @@
+﻿Model,Accuracy,Area Under the Curve,Hyperparameter,False Positives,False Negatives,Total Samples
+Logistic Regression,97.56%,98.25%,Convergence Tolerance (Epsilon),2,3,204
+"Random Forest (Matrix-Based Data, 500 trees)",95.71%,96.50%,Number of Trees,4,8,204
+XGBoost,87.80%,97.75%,Number of Rounds,4,1,41
